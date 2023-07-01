@@ -5,11 +5,15 @@ const morgan = require('morgan');
 const colors = require('colors');
 const fileupload = require('express-fileupload');
 const cookieParser = require('cookie-parser');
-const errorHandler = require('./middleware/error');
-const connectDB = require('./config/db');
 const mongoSanitize = require('express-mongo-sanitize');
 const helmet = require('helmet');
 const xss = require('xss-clean');
+const rateLimit = require('express-rate-limit');
+const hpp = require('hpp');
+const cors = require('cors');
+
+const errorHandler = require('./middleware/error');
+const connectDB = require('./config/db');
 
 dotenv.config({ path: './config/config.env' });
 
@@ -40,6 +44,18 @@ app.use(helmet());
 
 // Prevent XSS attacks <script>
 app.use(xss());
+
+const limiter = rateLimit({
+    windowMs: 10 * 60 * 1000, //10 mins
+    max: 100
+});
+
+app.use(limiter);
+
+// Prevent http param pollution
+app.use(hpp());
+
+app.use(cors());
 
 app.use(express.static(path.join(__dirname, 'public')));
 
